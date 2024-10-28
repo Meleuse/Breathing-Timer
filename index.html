@@ -1,191 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4-7-8 Breathing Timer</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 50px;
-        }
-        input {
-            margin: 10px;
-            padding: 5px;
-            font-size: 16px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 18px;
-            margin: 10px;
-        }
-        #startButton {
-            background-color: green;
-            color: white;
-        }
-        #pauseButton {
-            background-color: yellow;
-            color: black;
-        }
-        #stopButton {
-            background-color: orange;
-            color: white;
-        }
-        #timer {
-            font-size: 48px;
-            margin-top: 20px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breathing Timer</title>
+<style>
+    body {
+        font-family: "Inter", sans-serif;
+        background-color: #1A1A1A;
+        color: #CCCCCC;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+    }
+    h1 {
+        font-size: 24px;
+        color: #FFFFFF;
+        margin-bottom: 10px;
+    }
+    #timer-display {
+        font-size: 72px;
+        font-weight: bold;
+        color: #E5E5E5;
+    }
+    #stage {
+        font-size: 24px;
+        margin: 10px 0;
+    }
+    #total-time {
+        font-size: 16px;
+        color: #AAAAAA;
+        margin-bottom: 20px;
+    }
+    .button {
+        display: flex;
+        width: 100px;
+        height: 40px;
+        padding: 10px 25px;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+        border: none;
+        border-radius: 20px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.20);
+        color: #FFFFFF;
+    }
+    #start-button {
+        background: #253D30;
+    }
+    #stop-button {
+        background: #522E2A;
+    }
+    #button-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 5px;
+    }
+    #settings {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 20px;
+    }
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .input-group label {
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+    .input-group input {
+        width: 50px;
+        padding: 5px;
+        font-size: 16px;
+        text-align: center;
+        border: 1px solid #333;
+        border-radius: 5px;
+        background-color: #333;
+        color: #FFFFFF;
+    }
+</style>
 </head>
 <body>
+    <h1>Let's breathe</h1>
+    <div id="timer-display">Go!</div>
+    <div id="stage">Inhale</div>
+    <div id="total-time">Total time: <span id="calculated-time">00:00</span></div>
+    <div id="button-container">
+        <button id="start-button" class="button">Start</button>
+        <button id="stop-button" class="button">Stop</button>
+    </div>
+    <div id="settings">
+        <div class="input-group">
+            <label for="inhale-time">Inhale (sec.)</label>
+            <input id="inhale-time" type="number" value="4" min="1">
+        </div>
+        <div class="input-group">
+            <label for="exhale-time">Exhale (sec.)</label>
+            <input id="exhale-time" type="number" value="8" min="1">
+        </div>
+        <div class="input-group">
+            <label for="hold-time">Breath-hold (sec.)</label>
+            <input id="hold-time" type="number" value="7" min="1">
+        </div>
+        <div class="input-group">
+            <label for="sets">Sets</label>
+            <input id="sets" type="number" value="5" min="1">
+        </div>
+    </div>
 
-<h1>4-7-8 Breathing Timer</h1>
+    <script>
+        let inhaleTime, exhaleTime, holdTime, sets;
+        let timerInterval, currentStage = 'inhale', setCount = 0;
+        let isRunning = false;
+        let remainingTime = 0, elapsedTime = 0, totalSeconds;
+        const sound = new Audio("https://github.com/your-repo/Next_step.wav");
 
-<label for="inhaleTime">Время вдоха (в секундах):</label>
-<input type="number" id="inhaleTime" value="4" oninput="calculateTotalTime()"><br>
+        const timerDisplay = document.getElementById("timer-display");
+        const stageDisplay = document.getElementById("stage");
+        const totalTimeDisplay = document.getElementById("calculated-time");
 
-<label for="holdTime">Время задержки (в секундах):</label>
-<input type="number" id="holdTime" value="7" oninput="calculateTotalTime()"><br>
+        function calculateTotalTime() {
+            inhaleTime = parseInt(document.getElementById("inhale-time").value);
+            exhaleTime = parseInt(document.getElementById("exhale-time").value);
+            holdTime = parseInt(document.getElementById("hold-time").value);
+            sets = parseInt(document.getElementById("sets").value);
 
-<label for="exhaleTime">Время выдоха (в секундах):</label>
-<input type="number" id="exhaleTime" value="8" oninput="calculateTotalTime()"><br>
-
-<label for="repeatCount">Сколько раз повторить:</label>
-<input type="number" id="repeatCount" value="4" oninput="calculateTotalTime()"><br>
-
-<button id="startButton" onclick="startBreathing()">Начать дыхание</button>
-<button id="pauseButton" onclick="pauseBreathing()">Пауза</button>
-<button id="stopButton" onclick="stopBreathing()">Стоп</button>
-
-<h2 id="status">Готов к началу!</h2>
-<div id="timer">0</div>
-
-<h3>Общее время практики: <span id="totalTime">00:00</span></h3>
-
-<audio id="beep" src="beep.mp3" preload="auto"></audio>
-
-<script>
-    let interval; // Для обновления таймера
-    let pause = false; // Для паузы
-    let cycle = 0;
-    let remainingTime = 0; // Для отслеживания оставшегося времени в паузе
-    let currentPhase = ''; // Для отслеживания текущей фазы (вдох, задержка, выдох)
-    let breathingActive = false;
-
-    function startBreathing() {
-        if (breathingActive) return; // Не запускаем, если уже идет
-        breathingActive = true;
-        pause = false;
-        cycle = 0;
-
-        let inhaleTime = parseInt(document.getElementById('inhaleTime').value) * 1000;
-        let holdTime = parseInt(document.getElementById('holdTime').value) * 1000;
-        let exhaleTime = parseInt(document.getElementById('exhaleTime').value) * 1000;
-        let repeatCount = parseInt(document.getElementById('repeatCount').value);
-
-        let beepSound = document.getElementById("beep");
-        let statusText = document.getElementById("status");
-        let timerDisplay = document.getElementById("timer");
-
-        function playBeep() {
-            beepSound.play();
+            totalSeconds = sets * (inhaleTime + exhaleTime + holdTime);
+            updateTotalTimeDisplay();
         }
 
-        function updateTimer(timeLeft) {
-            clearInterval(interval);
-            timerDisplay.innerHTML = timeLeft / 1000; // Показываем время в секундах
-            interval = setInterval(() => {
-                if (!pause) {
-                    timeLeft -= 1000;
-                    remainingTime = timeLeft; // Сохраняем оставшееся время
-                    if (timeLeft >= 0) {
-                        timerDisplay.innerHTML = timeLeft / 1000;
+        function updateTotalTimeDisplay() {
+            const remainingSeconds = totalSeconds - elapsedTime;
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            totalTimeDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        calculateTotalTime();
+
+        function playSound() {
+            sound.play().catch(error => {
+                console.error("Sound playback failed:", error);
+            });
+        }
+
+        function startStage(duration, stageName, nextStage) {
+            remainingTime = duration;
+            timerDisplay.textContent = remainingTime;
+            stageDisplay.textContent = stageName.charAt(0).toUpperCase() + stageName.slice(1);
+            playSound();
+
+            timerInterval = setInterval(() => {
+                remainingTime -= 1;
+                elapsedTime += 1;
+                timerDisplay.textContent = remainingTime;
+                updateTotalTimeDisplay();
+
+                if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
+                    if (stageName === 'exhale' && setCount >= sets - 1) {
+                        stopTimer();
+                    } else if (stageName === 'exhale') {
+                        setCount += 1;
+                        startStage(inhaleTime, 'inhale', 'hold');
                     } else {
-                        clearInterval(interval);
+                        startStage(nextStage === 'exhale' ? exhaleTime : holdTime, nextStage, nextStage === 'hold' ? 'exhale' : 'hold');
                     }
                 }
             }, 1000);
         }
 
-        function startCycle() {
-            if (cycle >= repeatCount) {
-                statusText.innerHTML = "Практика завершена!";
-                timerDisplay.innerHTML = "0";
-                breathingActive = false;
-                return;
-            }
-
-            if (!pause) {
-                currentPhase = 'inhale';
-                statusText.innerHTML = "Вдох!";
-                playBeep();
-                updateTimer(inhaleTime);
-                setTimeout(() => {
-                    if (!pause) {
-                        currentPhase = 'hold';
-                        statusText.innerHTML = "Задержите дыхание!";
-                        playBeep();
-                        updateTimer(holdTime);
-                        setTimeout(() => {
-                            if (!pause) {
-                                currentPhase = 'exhale';
-                                statusText.innerHTML = "Выдох!";
-                                playBeep();
-                                updateTimer(exhaleTime);
-                                setTimeout(() => {
-                                    if (!pause) {
-                                        cycle++;
-                                        startCycle(); // Переход к следующему циклу
-                                    }
-                                }, exhaleTime);
-                            }
-                        }, holdTime);
-                    }
-                }, inhaleTime);
+        function startTimer() {
+            if (!isRunning) {
+                setCount = 0;
+                elapsedTime = 0;
+                calculateTotalTime();
+                isRunning = true;
+                startStage(inhaleTime, 'inhale', 'hold');
             }
         }
 
-        startCycle();
-    }
-
-    function pauseBreathing() {
-        if (breathingActive) {
-            pause = !pause; // Включение или отключение паузы
-            document.getElementById('status').innerHTML = pause ? "Пауза" : currentPhase === 'inhale' ? "Вдох!" : currentPhase === 'hold' ? "Задержите дыхание!" : "Выдох!";
+        function stopTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            timerDisplay.textContent = "Go!";
+            stageDisplay.textContent = "Inhale";
+            elapsedTime = 0;
+            setCount = 0;
+            remainingTime = inhaleTime;
+            updateTotalTimeDisplay();
         }
-    }
 
-    function stopBreathing() {
-        clearInterval(interval);
-        breathingActive = false;
-        pause = false;
-        remainingTime = 0;
-        cycle = 0;
-        document.getElementById("status").innerHTML = "Практика остановлена!";
-        document.getElementById("timer").innerHTML = "0";
-    }
+        document.getElementById("start-button").addEventListener("click", startTimer);
+        document.getElementById("stop-button").addEventListener("click", stopTimer);
 
-    // Функция для расчета общего времени практики
-    function calculateTotalTime() {
-        let inhaleTime = parseInt(document.getElementById('inhaleTime').value) || 0;
-        let holdTime = parseInt(document.getElementById('holdTime').value) || 0;
-        let exhaleTime = parseInt(document.getElementById('exhaleTime').value) || 0;
-        let repeatCount = parseInt(document.getElementById('repeatCount').value) || 0;
-
-        let totalTimeSeconds = (inhaleTime + holdTime + exhaleTime) * repeatCount;
-
-        let minutes = Math.floor(totalTimeSeconds / 60);
-        let seconds = totalTimeSeconds % 60;
-
-        // Форматируем в MM:SS
-        let formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        document.getElementById('totalTime').innerHTML = formattedTime;
-    }
-
-    // Рассчитываем общее время сразу при загрузке страницы
-    calculateTotalTime();
-</script>
-
+        document.getElementById("inhale-time").addEventListener("input", calculateTotalTime);
+        document.getElementById("exhale-time").addEventListener("input", calculateTotalTime);
+        document.getElementById("hold-time").addEventListener("input", calculateTotalTime);
+        document.getElementById("sets").addEventListener("input", calculateTotalTime);
+    </script>
 </body>
 </html>
